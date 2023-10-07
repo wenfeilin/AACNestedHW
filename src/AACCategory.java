@@ -21,7 +21,8 @@ public class AACCategory {
    * @param name the name of the category
    */
   public AACCategory(String name) {
-    // STUB
+    this.category = new AssociativeArray<String, String>();
+    this.categoryName = name;
   } // AACCategory​(String)
 
   // Methods
@@ -33,7 +34,7 @@ public class AACCategory {
    * @param text the text that image maps to
    */
   public void addItem(String imageLoc, String text) {
-    // STUB
+    this.category.set(imageLoc, text);
   } // addItem(String, String)
   
   /**
@@ -42,7 +43,7 @@ public class AACCategory {
    * @return the name of the category
    */
   public String getCategory() {
-    return null; // STUB
+    return this.categoryName;
   } // getCategory()
 
   /**
@@ -51,18 +52,18 @@ public class AACCategory {
    * @param imageLoc the location of the image
    * @return the text associated with the image
    */
-  public String getText(String imageLoc) {
-    return null; // STUB
+  public String getText(String imageLoc) throws KeyNotFoundException {
+    return this.category.get(imageLoc);
   } // getText(String)
 
   /**
-   * Determines if the provided images is stored in the category
+   * Determines if the provided image is stored in the category
    * 
-   * @param imageLoc the location of the category
+   * @param imageLoc the location of the image
    * @return true if it is in the category, false otherwise
    */
   public boolean hasImage(String imageLoc) {
-    return false; // STUB
+    return this.category.hasKey(imageLoc);
   } // hasImage(String)
 
   /**
@@ -71,6 +72,6 @@ public class AACCategory {
    * @return the array of image locations
    */
   public String[] getImages() {
-    return new String[0];// STUB
+    return this.category.getKeys();
   } // getImages()
 } // class AACCategory

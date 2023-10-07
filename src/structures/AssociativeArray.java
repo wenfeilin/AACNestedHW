@@ -269,4 +269,27 @@ public class AssociativeArray<K, V> {
       throw new KeyNotFoundException();
     }
   } // find(K)
+
+  /**
+   * Finds and returns all the keys in the associative array as strings.
+   */
+  public String[] getKeys() {
+    int numOfPairs = this.size;
+    String[] allKeys = new String[numOfPairs];
+    int pairsAdded = 0;
+    int i = 0;
+
+    if (numOfPairs != 0) { // Only add keys in the array of keys if the arr is not empty
+      while (pairsAdded != numOfPairs) { // Keep looping if not all pairs in arr have been seen
+        if (this.pairs[i] != null) { // If there is an non-null pair in the array,
+          // Add the key to the array of keys
+          allKeys[i] = (String) this.pairs[i].key;
+          pairsAdded++;
+        }
+          i++;
+      }
+    }
+
+    return allKeys;
+  } // toString()
 } // class AssociativeArray
