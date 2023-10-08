@@ -27,6 +27,11 @@ public class AACCategory {
 
   // Methods
 
+  // might keep (DECIDE LATER)
+  public String toString() {
+    return this.category.toString();
+  }
+
   /**
    * Adds the mapping of the imageLoc to the text to the category.
    * 

@@ -1,5 +1,12 @@
 import structures.AssociativeArray;
 import structures.KeyNotFoundException;
+import java.io.BufferedWriter;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.PrintWriter;
 
 /**
  * Represents all the mappings for a home page of items that should be displayed
@@ -8,21 +15,101 @@ import structures.KeyNotFoundException;
  * @author Catie Baker
  */
 public class AACMappings {
+
   // Fields
 
-  AssociativeArray<String,AACCategory> namesToCategory;
-  AACCategory categoryImgToNames;
+  // home page category
+  AACCategory categoryImgsToCategoryNames;
+  // categories' items (images and names)
+  AssociativeArray<String, AACCategory> categoryNamesToCategoryItems; 
   String currentCategory;
 
 
   // Constructor
 
-  public AACMappings(String filename) {
+  /**
+   * Reads in the file and creates the relevant mappings from images to categories 
+   * and adds all the items to each category. Should also start the AAC on the home screen
+   * @param filename
+   */
+  public AACMappings(String filename) { // would have to do error checking for this method LATER
+    // has to parse file for info
+    PrintWriter pen = new PrintWriter(System.out, true);
+    try {
+      BufferedReader reader = new BufferedReader(new FileReader(filename));
+      this.categoryImgsToCategoryNames = new AACCategory(""); // "" for home page
+      this.categoryNamesToCategoryItems = new AssociativeArray<String,AACCategory>();
+      String line;
+      String currentReadCategory = ""; // for later when adding items to the category
 
+      // keep looping while the end of file hasn't been reached
+      while((line = reader.readLine()) != null) { 
+        String[] words = line.split(" ");
+
+        if (line.charAt(0) != '>') { // this line has category img and category name
+          String categoryImgLoc = words[0];
+          String categoryName = words[1];
+
+          currentReadCategory = categoryName;
+          // Adds the category's image and its name to the array of all categories (home page)
+          this.categoryImgsToCategoryNames.addItem(categoryImgLoc, categoryName);
+
+          // create new category
+          AACCategory categoryItems = new AACCategory(currentReadCategory);
+          // add new category to array of all categories
+          this.categoryNamesToCategoryItems.set(currentReadCategory, categoryItems);
+        } else { // this line has item img and item name
+          String itemImgLoc = words[0].substring(1);
+          String itemName = "";
+
+          // In case the item name is multiple words
+          for (int i = 1; i < words.length; i++) {
+            itemName += words[i] + " ";
+          }
+          itemName = itemName.trim();
+
+          try {
+            // Adds the item's image and name to the specified category in the array detailing 
+            // all categories' items
+            AACCategory categoryArr = this.categoryNamesToCategoryItems.get(currentReadCategory);
+            categoryArr.addItem(itemImgLoc, itemName);
+          } catch (Exception e) {
+            pen.println("IDK what i'll do here"); // CHANGE LATER
+          }
+        }
+      }
+      reader.close(); // closes reader
+    } catch (FileNotFoundException e) {
+      pen.println("File was not found."); // CHANGE LATER
+      e.printStackTrace(); // CHANGE LATER
+    } catch (IOException e) {
+      // do sth
+      pen.println("I/O Exception"); // CHANGE LATER
+    }
+
+    this.currentCategory = ""; // on home page
   } // AACMappings()
 
 
   // Methods
+
+  // REMOVE LATER OR MAKE IT INTO A TOSTRING OF SOME SORT 
+  public void print() {
+    // prints all category names
+    int size = this.categoryImgsToCategoryNames.getImages().length;
+    for (int i = 0; i < size; i++) {
+      try {
+        System.out.println(this.categoryImgsToCategoryNames.getText(this.categoryImgsToCategoryNames.getImages()[i]));
+      } catch (KeyNotFoundException e) {
+        e.printStackTrace();
+      }
+    }
+
+    // prints all items in each category
+    String toBePrinted = this.categoryNamesToCategoryItems.toString();
+    System.out.println(toBePrinted);
+    
+  }
 
   /**
    * Given the image location selected, it determines the associated text with the image. 
@@ -32,7 +119,7 @@ public class AACMappings {
    * @param imageLoc the location where the image is stored
    * @return returns the text associated with the current image
    */
-  public String getText(String imageLoc) {
+  public String getText(String imageLoc) throws ElementNotFoundException {
     return "television";  // STUB
   } // getText(String)
   
@@ -49,7 +136,7 @@ public class AACMappings {
    * Resets the current category of the AAC back to the default category
    */
   public void reset() {
-    // STUB
+    this.currentCategory = "";
   } // reset()
 
   /**
@@ -57,7 +144,7 @@ public class AACMappings {
    * @return returns the current category or the empty string if on the default category
    */
   public String getCurrentCategory() {
-    return "food";  // STUB
+    return this.currentCategory; 
   } // getCurrentCategory()
 
   /**
@@ -84,7 +171,20 @@ public class AACMappings {
    * @param filename the name of the file to write the AAC mapping to
    */
   public void writeToFile(String filename) {
-    // STUB
+    try {
+      BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
+      writer.write("can write whatever here!"); // alter later
+      // OR
+      for (String element : arrayName) {
+        writer.write("sth\n");
+      }
+      // closes writer
+      writer.close(); 
+    } catch (IOException e) {
+      // might change instead of printing stack trace or leave idk
+      e.printStackTrace();
+    }
+    // unfinished STUB
   } // writeToFile(String)
 
   /**
