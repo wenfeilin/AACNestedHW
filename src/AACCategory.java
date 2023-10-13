@@ -8,12 +8,16 @@ import structures.KeyNotFoundException;
  * @author Catie Baker
  */
 public class AACCategory {
-  // Fields
+  // +--------+------------------------------------------------------
+  // | Fields |
+  // +--------+
 
   AssociativeArray<String, String> category;
   String categoryName;
 
-  // Constructor
+  // +--------------+------------------------------------------------
+  // | Constructors |
+  // +--------------+
 
   /**
    * Creates a new empty category with the given name
@@ -25,12 +29,9 @@ public class AACCategory {
     this.categoryName = name;
   } // AACCategory​(String)
 
-  // Methods
-
-  // might keep (DECIDE LATER)
-  public String toString() {
-    return this.category.toString();
-  }
+  // +----------------+----------------------------------------------
+  // | Public Methods |
+  // +----------------+
 
   /**
    * Adds the mapping of the imageLoc to the text to the category.
@@ -57,8 +58,13 @@ public class AACCategory {
    * @param imageLoc the location of the image
    * @return the text associated with the image
    */
-  public String getText(String imageLoc) throws KeyNotFoundException {
-    return this.category.get(imageLoc);
+  public String getText(String imageLoc) {
+    try {
+      return this.category.get(imageLoc);
+    } catch (KeyNotFoundException knfe) {
+      knfe.printStackTrace();
+      return "Error: Could not find text";
+    }
   } // getText(String)
 
   /**
@@ -77,6 +83,6 @@ public class AACCategory {
    * @return the array of image locations
    */
   public String[] getImages() {
-    return this.category.getKeys();
+    return this.category.getKeysForAAC();
   } // getImages()
 } // class AACCategory

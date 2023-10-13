@@ -219,6 +219,29 @@ public class AssociativeArray<K, V> {
     return this.size;
   } // size()
 
+  /**
+   * Finds and returns all the keys in the associative array as strings.
+   */
+  public String[] getKeysForAAC() {
+    int numOfPairs = this.size;
+    String[] allKeys = new String[numOfPairs];
+    int pairsAdded = 0;
+    int i = 0;
+
+    if (numOfPairs != 0) { // Only add keys in the array of keys if the arr is not empty
+      while (pairsAdded != numOfPairs) { // Keep looping if not all pairs in arr have been seen
+        if (this.pairs[i] != null) { // If there is an non-null pair in the array,
+          // Add the key to the array of keys
+          allKeys[i] = (String) this.pairs[i].key;
+          pairsAdded++;
+        }
+          i++;
+      }
+    }
+
+    return allKeys;
+  } // getKeysForAAC()
+
   // +-----------------+---------------------------------------------
   // | Private Methods |
   // +-----------------+
@@ -226,7 +249,7 @@ public class AssociativeArray<K, V> {
   /**
    * Expand the underlying array.
    */
-  public void expand() {
+  private void expand() {
     // Double the size of the current array
     this.pairs = java.util.Arrays.copyOf(this.pairs, this.pairs.length * 2);
   } // expand()
@@ -235,7 +258,7 @@ public class AssociativeArray<K, V> {
    * Find the index of the first entry in `pairs` that contains key.
    * If no such entry is found, throws an exception.
    */
-  public int find(K key) throws KeyNotFoundException {
+  private int find(K key) throws KeyNotFoundException {
     int numOfPairs = this.size;
 
     if (numOfPairs == 0) {
@@ -269,27 +292,4 @@ public class AssociativeArray<K, V> {
       throw new KeyNotFoundException();
     }
   } // find(K)
-
-  /**
-   * Finds and returns all the keys in the associative array as strings.
-   */
-  public String[] getKeys() {
-    int numOfPairs = this.size;
-    String[] allKeys = new String[numOfPairs];
-    int pairsAdded = 0;
-    int i = 0;
-
-    if (numOfPairs != 0) { // Only add keys in the array of keys if the arr is not empty
-      while (pairsAdded != numOfPairs) { // Keep looping if not all pairs in arr have been seen
-        if (this.pairs[i] != null) { // If there is an non-null pair in the array,
-          // Add the key to the array of keys
-          allKeys[i] = (String) this.pairs[i].key;
-          pairsAdded++;
-        }
-          i++;
-      }
-    }
-
-    return allKeys;
-  } // toString()
 } // class AssociativeArray

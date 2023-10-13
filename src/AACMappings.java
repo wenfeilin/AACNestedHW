@@ -7,6 +7,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.BufferedReader;
 import java.io.PrintWriter;
+import java.io.File;
 
 /**
  * Represents all the mappings for a home page of items that should be displayed
@@ -15,27 +16,30 @@ import java.io.PrintWriter;
  * @author Catie Baker
  */
 public class AACMappings {
+  // +--------+------------------------------------------------------
+  // | Fields |
+  // +--------+
 
-  // Fields
-
-  // home page category
+  // Home page (categories' images and names)
   AACCategory categoryImgsToCategoryNames;
-  // categories' items (images and names)
+  // Categories' items (images and text)
   AssociativeArray<String, AACCategory> categoryNamesToCategoryItems; 
   String currentCategory;
 
-
-  // Constructor
+  // +--------------+------------------------------------------------
+  // | Constructors |
+  // +--------------+
 
   /**
    * Reads in the file and creates the relevant mappings from images to categories 
    * and adds all the items to each category. Should also start the AAC on the home screen
    * @param filename
    */
-  public AACMappings(String filename) { // would have to do error checking for this method LATER
+  public AACMappings(String filename) { // ERROR CHECKING FORMAT OF FILE............?
     // has to parse file for info
     PrintWriter pen = new PrintWriter(System.out, true);
-    try {
+    
+    try {  
       BufferedReader reader = new BufferedReader(new FileReader(filename));
       this.categoryImgsToCategoryNames = new AACCategory(""); // "" for home page
       this.categoryNamesToCategoryItems = new AssociativeArray<String,AACCategory>();
@@ -68,47 +72,24 @@ public class AACMappings {
           }
           itemName = itemName.trim();
 
-          try {
-            // Adds the item's image and name to the specified category in the array detailing 
-            // all categories' items
-            AACCategory categoryArr = this.categoryNamesToCategoryItems.get(currentReadCategory);
-            categoryArr.addItem(itemImgLoc, itemName);
-          } catch (Exception e) {
-            pen.println("IDK what i'll do here"); // CHANGE LATER
-          }
+          // Adds the item's image and name to the specified category in the array detailing 
+          // all categories' items
+          AACCategory categoryArr = this.getExceptionCatching(currentReadCategory);
+          categoryArr.addItem(itemImgLoc, itemName);
         }
       }
       reader.close(); // closes reader
-    } catch (FileNotFoundException e) {
-      pen.println("File was not found."); // CHANGE LATER
-      e.printStackTrace(); // CHANGE LATER
-    } catch (IOException e) {
-      // do sth
-      pen.println("I/O Exception"); // CHANGE LATER
+    } catch (FileNotFoundException e) {// if the file wasn't found
+      pen.printf("Error: The file %s was not found.\n", filename);
+    } catch (IOException e) { // some other input/output error
+      pen.println(e.getMessage());
     }
-
     this.currentCategory = ""; // on home page
   } // AACMappings()
 
-
-  // Methods
-
-  // REMOVE LATER OR MAKE IT INTO A TOSTRING OF SOME SORT 
-  public void print() {
-    // prints all category names
-    int size = this.categoryImgsToCategoryNames.getImages().length;
-    for (int i = 0; i < size; i++) {
-      try {
-        System.out.println(this.categoryImgsToCategoryNames.getText(this.categoryImgsToCategoryNames.getImages()[i]));
-      } catch (KeyNotFoundException e) {
-        e.printStackTrace();
-      }
-    }
-
-    // prints all items in each category
-    String toBePrinted = this.categoryNamesToCategoryItems.toString();
-    System.out.println(toBePrinted);
-  }
+  // +----------------+----------------------------------------------
+  // | Public Methods |
+  // +----------------+
 
   /**
    * Given the image location selected, it determines the associated text with the image. 
@@ -118,42 +99,23 @@ public class AACMappings {
    * @param imageLoc the location where the image is stored
    * @return returns the text associated with the current image
    */
-  public String getText(String imageLoc) /* throws Exception */ {
+  public String getText(String imageLoc) {
+    String text = "Error: " + imageLoc + "does not have an associated text";
 
-    // AssociativeArray<String, AACCategory> categoryNamesToCategoryItems; 
-    // String currentCategory;
-
-    // go through category images first
+    // If the image represents a category
     if (categoryImgsToCategoryNames.hasImage(imageLoc)) {
-      try {
-        String categoryName = categoryImgsToCategoryNames.getText(imageLoc); // catch or deal with exception?
-        this.currentCategory = categoryName;
-        return categoryName;
-      } catch (Exception e) {
-        e.printStackTrace(); // change LATER
-        return null;
-      }
-    }
-    
-    // go through item images in categories
-    String[] categories = this.categoryNamesToCategoryItems.getKeys();
-    int numOfCategories = categories.length;
-    AACCategory categoryAACCategory;
+      String categoryName = categoryImgsToCategoryNames.getText(imageLoc);
+      this.currentCategory = categoryName;
+      text = categoryName;
+    } else {
+      // Otherwise, the image represents an item (in a category)
+      AACCategory categoryAAC = this.getExceptionCatching(this.currentCategory);
 
-    try { // ALSO I THINK I CAN ACTUALLY JUST REFER TO THE CURRENT CATEGORY FIELD FOR THE KEY INSTEAD OF LOOPING
-      for (int i = 0; i < numOfCategories; i++) {
-        categoryAACCategory = this.categoryNamesToCategoryItems.get(categories[i]);
-        if (categoryAACCategory.hasImage(imageLoc)) {
-          return categoryAACCategory.getText(imageLoc);
-        }
+      if (categoryAAC.hasImage(imageLoc)) {
+        text = categoryAAC.getText(imageLoc);
       }
-    } catch (Exception e) {
-      // do sth 
-      return null; // prob want it to throw exception in method's declaration b/c idk what to return otherwise
     }
-    
-    return "tele"; // reconfigure code so i don't need to do this!!
-    // need-fixing STUB
+    return text;
   } // getText(String)
   
   /**
@@ -161,18 +123,12 @@ public class AACMappings {
    * 
    * @return the array of images in the current category
    */
-  public String[] getImageLocs() /* throws ElementNotFoundException */ { // determine how the exception is dealt with (in AAC or here?)
-    if (currentCategory.equals("")) { // if the current category is the home page
+  public String[] getImageLocs() { 
+    if (this.currentCategory.equals("")) { // if the current category is the home page
       return this.categoryImgsToCategoryNames.getImages();
     } else { // if the current category is not the home page
-      try {
-        return this.categoryNamesToCategoryItems.get(currentCategory).getImages();
-      } catch (KeyNotFoundException e) {
-        e.printStackTrace(); // change LATER
-        return null;
-      }
+      return this.getExceptionCatching(this.currentCategory).getImages();
     }
-    // need-fixing STUB
   } // getImageLocs()
 
   /**
@@ -196,27 +152,29 @@ public class AACMappings {
    * @param imageLoc the location where the image is stored
    * @return true if the image represents a category, false if the image represents text to speak
    */
-  public boolean isCategory(String imageLoc) { // determine how to deal with exception
+  public boolean isCategory(String imageLoc) { 
+    boolean result = false;
+
     if (this.categoryImgsToCategoryNames.hasImage(imageLoc)) { // If the image is a category image
-      return true; // Image represents a category
-    } 
+      result = true; // Image represents a category
+    } else {
+      // assumed to return false but need to check if imageLoc even exists as an item image
+      String[] categories = this.categoryNamesToCategoryItems.getKeysForAAC();
+      boolean existsAsItem = false;
 
-    // check if imageLoc is any item image
-    String[] categories = this.categoryNamesToCategoryItems.getKeys();
-    int numOfCategories = categories.length;
-
-    try { // ALSO I THINK I CAN ACTUALLY JUST REFER TO THE CURRENT CATEGORY FIELD FOR THE KEY INSTEAD OF LOOPING
-      for (int i = 0; i < numOfCategories; i++) {
-        if (this.categoryNamesToCategoryItems.get(categories[i]).hasImage(imageLoc)) {
-          return false;
+      for (String category : categories) {
+        if (this.getExceptionCatching(category).hasImage(imageLoc)) {
+          existsAsItem = true;
         }
       }
-    } catch (Exception e) {
-      // do sth 
-      return false; // prob want it to throw exception in method's declaration b/c idk what to return otherwise
+
+      if (!existsAsItem) {
+        PrintWriter pen = new PrintWriter(System.out, true);
+        pen.printf("%s is not an image representing a text to speak nor" + 
+                   "is it an image representing a category.\n", imageLoc);
+      }
     }
-    return false; // reconfigure code so i don't need to do this!!
-    // need-fixing STUB
+    return result;
   } // isCategory(String)
 
   /**
@@ -232,34 +190,31 @@ public class AACMappings {
    * watermelon and clothing has a collared shirt
    * @param filename the name of the file to write the AAC mapping to
    */
-  public void writeToFile(String filename) { // determine how to handle the exception
+  public void writeToFile(String filename) {
+    PrintWriter pen = new PrintWriter(System.out, true);
+
     try {
       BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
       AACCategory categories = this.categoryImgsToCategoryNames;
       String[] categoryImgs = categories.getImages();
 
       for (String categoryImg : categoryImgs) {
-        try {
-          String categoryName = categories.getText(categoryImg);
-          writer.write(categoryImg + " " + categoryName + "\n");
+        String categoryName = categories.getText(categoryImg);
+        writer.write(categoryImg + " " + categoryName + "\n");
 
-          AACCategory itemsInCategory = this.categoryNamesToCategoryItems.get(categoryName);
-          String[] itemImages = itemsInCategory.getImages();
-          for (String itemImage : itemImages) {
-            String itemName = itemsInCategory.getText(itemImage);
-            writer.write(">" + itemImage + " " + itemName + "\n");
-          }
-        } catch (Exception e) {
-          System.out.println("bro...");
+        AACCategory itemsInCategory = this.getExceptionCatching(categoryName);
+        String[] itemImages = itemsInCategory.getImages();
+
+        for (String itemImage : itemImages) {
+          String itemName = itemsInCategory.getText(itemImage);
+          writer.write(">" + itemImage + " " + itemName + "\n");
         }
       }
       // closes writer
       writer.close(); 
     } catch (IOException e) {
-      // might change instead of printing stack trace or leave idk
-      e.printStackTrace();
+      pen.println(e.getMessage());
     }
-    // need-fixing STUB
   } // writeToFile(String)
 
   /**
@@ -269,28 +224,59 @@ public class AACMappings {
    * @param imageLoc the location of the image
    * @param text the text associated with the image
    */
-  public void add(String imageLoc, String text) { // determine how to deal with exception
+  public void add(String imageLoc, String text) {
+    File imgFile = new File(imageLoc);
+    boolean sameAsCategoryImg = this.categoryImgsToCategoryNames.hasImage(imageLoc);
+    boolean sameAsCategoryItemsImg = false;
+    PrintWriter pen = new PrintWriter(System.out, true);
+    String[] itemImageLocs = this.getImageLocs();
 
-    // IMAGES ONLY ADDED WHEN PATH RESEMBLES "img\category\img-name.png"
-    //     I DONT GET THIS B/C IN INPUT FILES, USING / WORKS BUT WHEN ADDING, NEED TO USE \ INSTEAD??
-    // ALSO NO DUPLICATE IMGS (B/C OF THE WAY ISCATEGORY AND GETTEXT WORK; DON'T KNOW IF
-    //    THERE IS A WAY AROUND THIS)
-
-    if (this.currentCategory.equals("")) { // if on the home page
-      // adds a new category with its name and image
-      this.categoryImgsToCategoryNames.addItem(imageLoc, text);
-      // sets up a place to put items of that category (for future item additions)
-      this.categoryNamesToCategoryItems.set(text, new AACCategory(text));
-    } else { // if in a category (page)
-      String currCategory = this.currentCategory;
-      try {
-        AACCategory categoryAAC = this.categoryNamesToCategoryItems.get(currCategory);
-        categoryAAC.addItem(imageLoc, text);
-      } catch (Exception e) {
-        // do something?
-        System.out.println("naur naur");
+    if (imageLoc.contains("\\")) {
+      imageLoc = imageLoc.replace("\\", "/");
+    }
+    if (imageLoc.contains("//")) {
+      imageLoc = imageLoc.replace("//", "/");
+    }
+    for (String itemImageLoc : itemImageLocs) {
+      if (imageLoc.equals(itemImageLoc)) {
+        sameAsCategoryItemsImg = true;
       }
     }
-    // need-fixing STUB
+
+    if (imgFile.exists() && !sameAsCategoryImg && !sameAsCategoryItemsImg) { // only execute if imgLoc path is valid 
+      if (this.currentCategory.equals("")) { // if on the home page
+        // adds a new category with its name and image
+        this.categoryImgsToCategoryNames.addItem(imageLoc, text);
+        // sets up a place to put items of that category (for future item additions)
+        this.categoryNamesToCategoryItems.set(text, new AACCategory(text));
+      } else { // if in a category (page)
+        AACCategory categoryAAC = this.getExceptionCatching(this.currentCategory);
+        categoryAAC.addItem(imageLoc, text);
+      }
+    } else if (sameAsCategoryItemsImg) {
+      pen.println("Adding was not successful. The item image cannot be a duplicate image.\n");
+    } else if (sameAsCategoryImg) { 
+      // The image for an item should not be the same as the image for the category it's in
+      // b/c that causes problems with the getText method in this class, given the 
+      // structures in the fields
+      pen.println("Adding was not successful. The item image cannot be the same as the category image.\n");
+    } else { // imageLoc path is not valid 
+      pen.println("Adding was not successful. Image location was not a valid path.\n");
+    }
   } // add(String, String)
+
+  // +-----------------+---------------------------------------------
+  // | Private Methods |
+  // +-----------------+
+
+  private AACCategory getExceptionCatching(String category) {
+    try {
+      return this.categoryNamesToCategoryItems.get(category);
+    } catch (KeyNotFoundException knfe) {
+      // Does nothing b/c category is guaranteed to be a key of this.categoryNamesToCategoryItems,
+      // so KeyNotFoundException will never be caught here b/c as a helper fxn, the methods in 
+      // this class that invoke it ensure this fact
+      return null; // for the sake of returning something
+    }
+  } // getExceptionCatching()
 } // class AACMappings
