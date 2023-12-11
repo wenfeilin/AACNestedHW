@@ -57,29 +57,37 @@ public class AssociativeArray<K, V> {
    * Create a copy of this AssociativeArray.
    */
   public AssociativeArray<K, V> clone() {
-    AssociativeArray<K,V> clonedAssociativeArray = new AssociativeArray<K,V>();
+    AssociativeArray<K,V> clonedAssociativeArray = 
+        new AssociativeArray<K,V>();
+    int numOfExpansions = this.pairs.length / DEFAULT_CAPACITY;
 
-    for (int i = 0; i < this.pairs.length; i++) { // Iterate through all of array
+    // Expands the cloned array to match at least the 
+    // size of the original array
+    for (int i = 0; i < numOfExpansions; i++) {
+      clonedAssociativeArray.expand();
+    } // for
+
+    for (int i = 0; i < this.pairs.length; i++) { 
       if (this.pairs[i] != null) {
-        // As long as the entry is not null, create a new pair to insert in the cloned array
-        // at the same index currently in the original array, and copy the key and value 
-        // over to the new pair
+        // As long as the entry is not null, create a new pair to insert in 
+        // the cloned array at the same index currently in the original array,
+        // and copy the key and value over to the new pair
         KVPair<K,V> newPair = (KVPair<K,V>) new KVPair<K,V>(null, null);
         newPair.key = this.pairs[i].key;
         newPair.value = this.pairs[i].value;
         clonedAssociativeArray.pairs[i] = newPair;
       } else {
-        // Otherwise, you're looking at a null entry, so just set the spot in the cloned array
-        // to null 
+        // Otherwise, you're looking at a null entry, so just set the spot in 
+        // the cloned array to null 
         clonedAssociativeArray.pairs[i] = null;
-      }
-    }
+      } // if/else
+    } // for
     // Copy over the size
     clonedAssociativeArray.size = this.size;
 
     return clonedAssociativeArray;
   } // clone()
-
+  
   /**
    * Convert the array to a string.
    */
