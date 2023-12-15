@@ -109,11 +109,11 @@ public class AssociativeArray<K, V> {
             keyValuePairs += ",";
           } else { // Spacing for after the commas 
             keyValuePairs += " ";
-          }
-        }
+          } // if/else
+        } // if
           i++;
-      }
-    }
+      } // while
+    } // if
     keyValuePairs += "}"; // Will always print closing curly brace
       
     return keyValuePairs;
@@ -135,17 +135,6 @@ public class AssociativeArray<K, V> {
       KVPair<K,V> newPair = (KVPair<K,V>) new KVPair<K,V>(key, value);
       this.pairs[0] = newPair;
       this.size++;
-    } else if (numOfPairs == this.pairs.length) {
-      // If the array is full, then expand the array before adding the new entry
-      // Create new pair
-      KVPair<K,V> newPair = (KVPair<K,V>) new KVPair<K,V>(key, value);
-      int nextEntryIndex = numOfPairs;
-
-      // Expand array, insert new pair in expanded array, and increase the size field of 
-      // the expanded array
-      this.expand();
-      this.pairs[nextEntryIndex] = newPair; 
-      this.size++; 
     } else {
       // Determine if a new entry will be added (anywhere in the array that is
       // null) or if the value of the entry with the specified key will be 
@@ -157,19 +146,32 @@ public class AssociativeArray<K, V> {
         // entry's value
         this.pairs[keyIndex].value = value;
       } catch (KeyNotFoundException knfe) {
-        // If an exception was caught, then there isn't a current entry in the array
-        // with the specified key, so add a new entry to the array
+        // If an exception was caught, then there isn't a current entry in 
+        // the array with the specified key, so add a new entry to the array
         KVPair<K,V> newPair = (KVPair<K,V>) new KVPair<K,V>(key, value);
-        int i = 0;
 
-        // Insert new pair at the first null space in the array
-        while (this.pairs[i] != null) {
-          ++i;
-        }
-        this.pairs[i] = newPair;
-        this.size++;
-      }
-    }
+        // Check if associative array is full first
+        if (numOfPairs == this.pairs.length) {
+          int nextEntryIndex = numOfPairs;
+
+          // Expand array, insert new pair in expanded array, and increase 
+          // the size field of the expanded array
+          this.expand();
+          this.pairs[nextEntryIndex] = newPair; 
+          this.size++; 
+        } else {
+          // Since associative array is not full
+          int i = 0;
+
+          // Insert new pair at the first null space in the array
+          while (this.pairs[i] != null) {
+            ++i;
+          } // while
+          this.pairs[i] = newPair;
+          this.size++;
+        } // if/else
+      } // try/catch
+    } // if/else
   } // set(K,V)
 
   /**
@@ -200,7 +202,7 @@ public class AssociativeArray<K, V> {
       
       // Return false to indicate there is no such key in the array
       return false;
-    }     
+    } // try/catch     
   } // hasKey(K)
 
   /**
@@ -217,7 +219,7 @@ public class AssociativeArray<K, V> {
       this.size--;
     } catch (KeyNotFoundException knfe) {
       // Does nothing since there is no entry with specified key
-    }
+    } // try/catch
   } // remove(K)
 
   /**
@@ -242,10 +244,10 @@ public class AssociativeArray<K, V> {
           // Add the key to the array of keys
           allKeys[i] = (String) this.pairs[i].key;
           pairsAdded++;
-        }
+        } // if
           i++;
-      }
-    }
+      } // while
+    } // if
 
     return allKeys;
   } // getKeysForAAC()
@@ -272,7 +274,7 @@ public class AssociativeArray<K, V> {
     if (numOfPairs == 0) {
       // If the array is empty, there is no key to be found
       throw new KeyNotFoundException();
-    }
+    } // if
 
     // Otherwise, the array has entries in it
     int i = 0;
@@ -288,16 +290,16 @@ public class AssociativeArray<K, V> {
           // If the current entry's key matches the one being searched for,
           // save that entry's index
           keyIndex = i;
-        }
+        } // if
         ++pairsTraversed;
-      }
+      } // if
       ++i;
-    }
+    } // while
 
     if (keyIndex != -1) { // If the key was found, return the index at which it was found
       return keyIndex;
     } else { // Otherwise, throw a KeyNotFoundException (the key doesn't exist)
       throw new KeyNotFoundException();
-    }
+    } // if/else
   } // find(K)
 } // class AssociativeArray
