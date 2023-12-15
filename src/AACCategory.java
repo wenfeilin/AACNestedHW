@@ -64,7 +64,7 @@ public class AACCategory {
     } catch (KeyNotFoundException knfe) {
       knfe.printStackTrace();
       return "Error: Could not find text";
-    }
+    } // try/catch
   } // getText(String)
 
   /**

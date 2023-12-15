@@ -62,7 +62,7 @@ public class AACMappings {
           pen.printf("Error: Format of file input in %s was wrong. " + 
               "Please fix the text formatting of the file before running again.\n", filename);
           System.exit(3);
-        }
+        } // if
 
         if (line.charAt(0) != '>') { // This line has category img and category name
           String categoryImgLoc = words[0];
@@ -83,23 +83,23 @@ public class AACMappings {
           // Determine the item text
           for (int i = 1; i < words.length; i++) { // In case the item name is multiple words
             itemName += words[i] + " ";
-          }
+          } // for
           itemName = itemName.trim();
 
           // Adds the item's image and name to the specified category in the array detailing 
           // all categories' items
           AACCategory categoryArr = this.getExceptionCatching(currentReadCategory);
           categoryArr.addItem(itemImgLoc, itemName);
-        }
-      }
-      reader.close(); // closes reader
+        } // if/else
+      } // while
+      reader.close();
     } catch (FileNotFoundException e) {// if the file wasn't found
       pen.printf("Error: The file %s was not found.\n", filename);
       System.exit(1);
     } catch (IOException e) { // some other input/output error
       pen.println(e.getMessage());
       System.exit(3);
-    }
+    } // try/catch
     this.currentCategory = ""; // on home page
   } // AACMappings()
 
@@ -134,8 +134,8 @@ public class AACMappings {
       // Get the text associated with the item image (only if there is one)
       if (categoryAAC.hasImage(imageLoc)) {
         text = categoryAAC.getText(imageLoc);
-      }
-    }
+      } // if
+    } // if/else
     return text;
   } // getText(String)
   
@@ -149,7 +149,7 @@ public class AACMappings {
       return this.categoryImgsToCategoryNames.getImages(); // get all category images
     } else { // If the current category is not the home page,
       return this.getExceptionCatching(this.currentCategory).getImages(); // get all item images
-    }
+    } // if/else
   } // getImageLocs()
 
   /**
@@ -190,15 +190,15 @@ public class AACMappings {
       for (String category : categories) {
         if (this.getExceptionCatching(category).hasImage(imageLoc)) {
           existsAsItem = true;
-        }
-      }
+        } // if
+      } // for
 
       if (!existsAsItem) { // When imageLoc is not part of AAC Mappings
         PrintWriter pen = new PrintWriter(System.out, true);
         pen.printf("Error: %s is not an image representing a text to speak nor " + 
                    "is it an image representing a category.\n", imageLoc);
-      }
-    }
+      } // if
+    } // if/else
     return result;
   } // isCategory(String)
 
@@ -238,13 +238,13 @@ public class AACMappings {
         for (String itemImage : itemImages) {
           String itemName = itemsInCategory.getText(itemImage);
           writer.write(">" + itemImage + " " + itemName + "\n");
-        }
-      }
+        } // for
+      } // for
       // closes writer
       writer.close(); 
     } catch (IOException e) {
       pen.println(e.getMessage());
-    }
+    } // try/catch
   } // writeToFile(String)
 
   /**
@@ -263,11 +263,11 @@ public class AACMappings {
     // For portable code (converting format of file paths)
     if (imageLoc.contains("\\")) {
       imageLoc = imageLoc.replace("\\", "/");
-    }
+    } // if
 
     if (imageLoc.contains("//")) {
       imageLoc = imageLoc.replace("//", "/");
-    }
+    } // if
 
     if (!imgFile.exists()) { // imageLoc path is not valid 
       pen.printf("Error: %s, the image location, is not a valid path. " + 
@@ -287,14 +287,14 @@ public class AACMappings {
         this.categoryImgsToCategoryNames.addItem(imageLoc, text);
         // and set up an AACCategory to put items of that category (for future item additions)
         this.categoryNamesToCategoryItems.set(text, new AACCategory(text));
-      }
+      } // if/else
     } else { // Trying to add an item (on category page)
       // Checking if imageLoc is a duplicate item image
       for (String itemImageLoc : itemImageLocs) {
         if (imageLoc.equals(itemImageLoc)) {
           sameAsCategoryItemsImg = true;
-        }
-      }
+        } // if
+      } // for
       
       // Retrieving img for current category (for error-checking later)
       String[] allCategoryImgs = this.categoryImgsToCategoryNames.getImages();
@@ -305,8 +305,8 @@ public class AACMappings {
       for (String categoryImg : allCategoryImgs) {
         if (this.categoryImgsToCategoryNames.getText(categoryImg).equals(this.currentCategory)) {
           currentCategoryImg = categoryImg;
-        }
-      }
+        } // if
+      } // for
       
       // Error-checking (b/c some duplicate images (2 categories with the same img, an item in 
       // a category with the same img as the category its in, and two items in the same category
@@ -325,8 +325,8 @@ public class AACMappings {
         // Add the specified text and image as an item to the category
         AACCategory categoryAAC = this.getExceptionCatching(this.currentCategory);
         categoryAAC.addItem(imageLoc, text);
-      }
-    }
+      } // if/else
+    } // if/else
   } // add(String, String)
 
   // +-----------------+---------------------------------------------
@@ -351,6 +351,6 @@ public class AACMappings {
       // so KeyNotFoundException will never be caught here b/c as a helper fxn, the methods in 
       // this class that invoke it ensure this fact
       return null; // for the sake of returning something
-    }
+    } // try/catch
   } // getExceptionCatching()
 } // class AACMappings
