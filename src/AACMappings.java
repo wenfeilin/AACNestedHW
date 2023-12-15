@@ -64,32 +64,12 @@ public class AACMappings {
           System.exit(3);
         } // if
 
-        if (line.charAt(0) != '>') { // This line has category img and category name
-          String categoryImgLoc = words[0];
-          String categoryName = words[1];
-
-          currentReadCategory = categoryName;
-          // Adds the category's image and its name to the array of all categories (home page)
-          this.categoryImgsToCategoryNames.addItem(categoryImgLoc, categoryName);
-
-          // Creates new category
-          AACCategory categoryItems = new AACCategory(currentReadCategory);
-          // Adds new category to array of all categories
-          this.categoryNamesToCategoryItems.set(currentReadCategory, categoryItems);
-        } else { // This line has item img and item text
-          String itemImgLoc = words[0].substring(1);
-          String itemName = "";
-
-          // Determine the item text
-          for (int i = 1; i < words.length; i++) { // In case the item name is multiple words
-            itemName += words[i] + " ";
-          } // for
-          itemName = itemName.trim();
-
-          // Adds the item's image and name to the specified category in the array detailing 
-          // all categories' items
-          AACCategory categoryArr = this.getExceptionCatching(currentReadCategory);
-          categoryArr.addItem(itemImgLoc, itemName);
+        // This line has category img and category name
+        if (line.charAt(0) != '>') { 
+          currentReadCategory = addCategoryFromFileToMappings(words);
+        } else { 
+          // This line has item img and item text
+          addItemFromFileToMappings(words, currentReadCategory);
         } // if/else
       } // while
       reader.close();
@@ -256,76 +236,19 @@ public class AACMappings {
    */
   public void add(String imageLoc, String text) {
     File imgFile = new File(imageLoc);
-    boolean sameAsCategoryItemsImg = false;
     PrintWriter pen = new PrintWriter(System.out, true);
     String[] itemImageLocs = this.getImageLocs();
 
-    // For portable code (converting format of file paths)
-    if (imageLoc.contains("\\")) {
-      imageLoc = imageLoc.replace("\\", "/");
-    } // if
-
-    if (imageLoc.contains("//")) {
-      imageLoc = imageLoc.replace("//", "/");
-    } // if
+    // Edit file path of the image if needed (for portable code)
+    imageLoc = editImageLoc(imageLoc);
 
     if (!imgFile.exists()) { // imageLoc path is not valid 
       pen.printf("Error: %s, the image location, is not a valid path. " + 
           "Adding was not successful.\n", imageLoc);
-    } else if (this.currentCategory.equals("")) { // Trying to add a category (on home page)
-      // Check home page for conflicts
-      if (this.categoryImgsToCategoryNames.hasImage(imageLoc)) { 
-        // If the image is a duplicate of a category image, don't add the new category b/c
-        // duplicates cause conflicts with the structures given in the fields of this class
-        pen.println("Error: This category image cannot be a duplicated image of an existing" + 
-            " category image in the home page. Adding was not successful.");
-      } else { 
-        // Otherwise, the image is not a duplicate category image, and the new category
-        // can be successfully added
-
-        // Add a new category with specified name and image
-        this.categoryImgsToCategoryNames.addItem(imageLoc, text);
-        // and set up an AACCategory to put items of that category (for future item additions)
-        this.categoryNamesToCategoryItems.set(text, new AACCategory(text));
-      } // if/else
-    } else { // Trying to add an item (on category page)
-      // Checking if imageLoc is a duplicate item image
-      for (String itemImageLoc : itemImageLocs) {
-        if (imageLoc.equals(itemImageLoc)) {
-          sameAsCategoryItemsImg = true;
-        } // if
-      } // for
-      
-      // Retrieving img for current category (for error-checking later)
-      String[] allCategoryImgs = this.categoryImgsToCategoryNames.getImages();
-      String currentCategoryImg = "";
-
-      // Loops through each category img to find which one is the current category's img 
-      // (according to if their names match)
-      for (String categoryImg : allCategoryImgs) {
-        if (this.categoryImgsToCategoryNames.getText(categoryImg).equals(this.currentCategory)) {
-          currentCategoryImg = categoryImg;
-        } // if
-      } // for
-      
-      // Error-checking (b/c some duplicate images (2 categories with the same img, an item in 
-      // a category with the same img as the category its in, and two items in the same category
-      // with the same imgs) will not work well with the structures in AACMappings)
-      if (imageLoc.equals(currentCategoryImg)) { // Check current category's image for conflicts
-        // If the image is a duplicate of its category's image
-        pen.println("Error: This item image cannot be a duplicated image of its category's" + 
-            " image. Adding was not successful.");
-      } else if (sameAsCategoryItemsImg) { // Check items for conflicts
-        pen.println("Error: This item image cannot be a duplicated image of another item image" + 
-            " in the same category. Adding was not successful.");
-      } else { 
-        // Otherwise, the image is not a duplicate image, and the new item can be 
-        // successfully added
-
-        // Add the specified text and image as an item to the category
-        AACCategory categoryAAC = this.getExceptionCatching(this.currentCategory);
-        categoryAAC.addItem(imageLoc, text);
-      } // if/else
+    } else if (this.currentCategory.equals("")) { 
+      addCategoryFromInterface(pen, imageLoc, text);
+    } else { 
+      addItemFromInterface(imageLoc, text, itemImageLocs, pen);
     } // if/else
   } // add(String, String)
 
@@ -353,4 +276,149 @@ public class AACMappings {
       return null; // for the sake of returning something
     } // try/catch
   } // getExceptionCatching()
+
+  /**
+   * Adds category from a category line of an input AACMappings file 
+   * into AACMappings
+   * 
+   * @param words the words in a single line of the input mappings file
+   * @return the current category being added
+   */
+  private String addCategoryFromFileToMappings(String[] words) {
+    String categoryImgLoc = words[0];
+    String categoryName = words[1];
+
+    // Adds the category's image and its name to the array of all categories (home page)
+    this.categoryImgsToCategoryNames.addItem(categoryImgLoc, categoryName);
+
+    // Creates new category
+    AACCategory categoryItems = new AACCategory(categoryName);
+    // Adds new category to array of all categories
+    this.categoryNamesToCategoryItems.set(categoryName, categoryItems);
+
+    return categoryName;
+  } // addCategoryToMappings(String[])
+
+  /**
+   * Adds item from an item line of an input AACMappings file 
+   * into AACMappings
+   * 
+   * @param words the words in a single line of the input mappings file
+   * @param currentReadCategory the current category the item is being added into
+   */
+  private void addItemFromFileToMappings(String[] words, String currentReadCategory) {
+    // This line has item img and item text
+    String itemImgLoc = words[0].substring(1);
+    String itemName = "";
+
+    // Determine the item text:
+    // In case the item name is multiple words
+    for (int i = 1; i < words.length; i++) { 
+      itemName += words[i] + " ";
+    } // for
+    itemName = itemName.trim();
+
+    // Adds the item's image and name to the specified category in the array detailing 
+    // all categories' items
+    AACCategory categoryArr = this.getExceptionCatching(currentReadCategory);
+    categoryArr.addItem(itemImgLoc, itemName);
+  } // addItemToMappings(String[], String)
+
+  /**
+   * Edits the slashes in the path of an image to work for Windows or Linux.
+   * (Because I get confused.)
+   * 
+   * @param imageLoc path of an image
+   * @return new edited path of the image
+   */
+  private String editImageLoc(String imageLoc) {
+    // For portable code (converting format of file paths)
+    if (imageLoc.contains("\\")) {
+      return imageLoc.replace("\\", "/");
+    } // if
+
+    if (imageLoc.contains("//")) {
+      return imageLoc.replace("//", "/");
+    } // if
+
+    return imageLoc;
+  } // editImageLoc(String)
+
+  /**
+   * Adds a category onto the home page from the interface.
+   * 
+   * @param pen for printin
+   * @param imageLoc path of the image associated with the category
+   * @param text text associated with the category
+   */
+  private void addCategoryFromInterface(PrintWriter pen, String imageLoc, String text) {
+    // Trying to add a category (on home page):
+    // Check home page for conflicts
+    if (this.categoryImgsToCategoryNames.hasImage(imageLoc)) { 
+      // If the image is a duplicate of a category image, don't add the new category b/c
+      // duplicates cause conflicts with the structures given in the fields of this class
+      pen.println("Error: This category image cannot be a duplicated image of an existing" + 
+          " category image in the home page. Adding was not successful.");
+    } else { 
+      // Otherwise, the image is not a duplicate category image, and 
+      // the new category can be successfully added
+
+      // Add a new category with specified name and image
+      this.categoryImgsToCategoryNames.addItem(imageLoc, text);
+      // and set up an AACCategory to put items of that category 
+      // (for future item additions)
+      this.categoryNamesToCategoryItems.set(text, new AACCategory(text));
+    } // if/else
+  } // addCategoryFromInterface(PrintWriter, String, String)
+
+  /**
+   * Adds an item into the appropriate category from the interface.
+   * 
+   * @param imageLoc path of the image associated with the item
+   * @param text text associated with the item
+   * @param itemImageLocs images in the currently location
+   * @param pen for printing
+   */
+  private void addItemFromInterface(String imageLoc, String text, String[] itemImageLocs, PrintWriter pen) {
+    boolean sameAsCategoryItemsImg = false;
+
+    // Trying to add an item (on category page):
+    // Checking if imageLoc is a duplicate item image
+    for (String itemImageLoc : itemImageLocs) {
+      if (imageLoc.equals(itemImageLoc)) {
+        sameAsCategoryItemsImg = true;
+      } // if
+    } // for
+    
+    // Retrieving img for current category (for error-checking later)
+    String[] allCategoryImgs = this.categoryImgsToCategoryNames.getImages();
+    String currentCategoryImg = "";
+
+    // Loops through each category img to find which one is the current category's img 
+    // (according to if their names match)
+    for (String categoryImg : allCategoryImgs) {
+      if (this.categoryImgsToCategoryNames.getText(categoryImg).equals(this.currentCategory)) {
+        currentCategoryImg = categoryImg;
+      } // if
+    } // for
+    
+    // Error-checking (b/c some duplicate images (2 categories with the same img, an item in 
+    // a category with the same img as the category its in, and two items in the same category
+    // with the same imgs) will not work well with the structures in AACMappings)
+    if (imageLoc.equals(currentCategoryImg)) { // Check current category's image for conflicts
+      // If the image is a duplicate of its category's image
+      pen.println("Error: This item image cannot be a duplicated image of its category's" + 
+          " image. Adding was not successful.");
+    } else if (sameAsCategoryItemsImg) { // Check items for conflicts
+      pen.println("Error: This item image cannot be a duplicated image of another item image" + 
+          " in the same category. Adding was not successful.");
+    } else { 
+      // Otherwise, the image is not a duplicate image, and the new item can be 
+      // successfully added
+
+      // Add the specified text and image as an item to the category
+      AACCategory categoryAAC = this.getExceptionCatching(this.currentCategory);
+      categoryAAC.addItem(imageLoc, text);
+    } // if/else
+  } // addItemFromInterface(String, String, String[], PrintWriter)
 } // class AACMappings
